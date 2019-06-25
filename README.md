@@ -60,6 +60,12 @@ At this point we are going to use the Twilio design
 }
 ```
 
+## Locking
+
+No locking is implemented at this point.  Since rest is not persistent normal locking mechanisms will not work.  If locking
+is needed we will need to implement a locking daemon that will hold the locks for us.  jBASE long term has a non-persistent
+locking scheme but it is not complete yet.
+
 ## Methods
 
 https(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
@@ -95,6 +101,35 @@ The body needs to contain our record in hex
 http(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
 VERB: DELETE (Should this be more focused??)
 
+# Under Construction/todo 
 
+## Subroutine
+
+http(s)://{host}/api/restmv/{version}/call/subroutinename
+VERB: PUT (Post will not be used)
+
+Params will be passed as hex converted items in a array
+
+```
+{  "params": [ "{param 1 as hex}","{param 2 as hex}",... ]
+```
+
+## Execute
+
+http(s)://{host}/api/restmv/{version}/execute
+VERB: PUT (Post will not be used)
+
+We will need to handle all the execute options.  This is a very early spec sheet.
+
+```
+{  
+   "GETLIST":"Name of list to do a GET-LIST first",
+   "EXECUTE":"Execute command",
+   "DATA ITEMS": [ "array of data statements","data2" ],
+   "CAPTURING": "Captured output",
+   "RETURNING": "Returning code"
+}
+
+```
 
 
