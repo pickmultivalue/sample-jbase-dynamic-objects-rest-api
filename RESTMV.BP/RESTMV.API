@@ -1,0 +1,69 @@
+$options jabba
+
+CALL WGETHEADER(REQUEST_METHOD, "REQUEST_METHOD")
+
+CALL WGETPARAM(ACTION,1)
+
+response = new object(); * we are still going to output something due to mvconnect wanting output!
+
+response->status="OK"
+
+ACTION=OCONV(ACTION,"MCU")
+
+PRINT ACTION
+
+BEGIN CASE
+    CASE ACTION="CRUD"
+        GOSUB crudfunction
+    CASE ACTION="CALL"
+        GOSUB callfunction
+    CASE ACTION="EXECUTE"
+        GOSUB executefunction
+    CASE 1  
+        CALL WSETSTATUS("501")
+
+END CASE
+
+CALL WSEND(response->$tojson(1))
+
+STOP
+
+crudfunction: *
+
+
+CALL WGETPARAM(FILENAME,2)
+
+open FILENAME to FILE else
+    CALL WSETSTATUS("502")
+    RETURN
+end
+
+CALL WGETPARAM(ITEMNAME,3)
+
+Begin Case
+    case REQUEST_METHOD = "GET"
+        read RECORD from FILE, ITEMNAME else
+            CALL WSETSTATUS("503")
+            return
+        end
+        response->record = oconv(RECORD,"MX")
+    case REQUEST_METHOD = "PUT" OR REQUEST_METHOD = "POST"
+        call WGETBODY(BODY)
+        bodyobJ = BODY->$fromjson()
+        RECORD = oconv(bodyobj->record,"MY")
+        write RECORD on FILE, ITEMNAME
+        response->statusmsg = "Wrote ":LEN(RECORD):" bytes to ":FILENAME:" ":ITEMNAME 
+    case REQUEST_METHOD = "DELETE"
+        delete FILE, ITEMNAME
+        response->statusmsg = "Deleted ":FILENAME:" ":ITEMNAME
+End Case
+
+RETURN
+
+callfunction: *
+RETURN
+
+executefunction: *
+RETURN
+
+
