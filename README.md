@@ -21,7 +21,8 @@ future we will utilize a content type heading to allow others (such as BASE64).
 Due to this the default for now is
 
 ACCEPT: application/json   
-X-RESTMV-MVENCODING: HEX
+X-RESTMV-MVENCODING: HEX (default)
+X-RESTMV-MVENCODING: BASE64
 
 If these are left off then the above defaults will be used.  If you request something else then the request will
 be rejected.
