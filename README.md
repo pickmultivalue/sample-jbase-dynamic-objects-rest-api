@@ -12,20 +12,24 @@ http(s)://{host}/api/restmv/{version}
 
 ## Encoding
 
-Due to encoding issues around char(254) we will be encoding all Multi-Value records.  Current MVConnect has built
-in char(254) -> new line conversions that make returning a char(254) impossible.  In addition direct returning
-of a char(254) can cause issues with clients that are expecting UTF-8.  Due to the time to build out this library we
-will be utilizing a HEX encoding that then returns NON utf-8 responses.  This output will be the DEFAULT and in the
-future we will utilize a content type heading to allow others (such as BASE64).
+Default encoding is type: array.  The record will be stored in a 3 level json array.  The second and third level arrays will ONLY be used if the pick record has multi-values.
 
-Due to this the default for now is
+Example
+```
+Pick Data
+1> First Name
+2> Last Name
+3> STREET]CITY]STATE]ZIP
+4> 4-1-1\4-1-2]4-2-1\4-2-2
 
-ACCEPT: application/json   
-X-RESTMV-MVENCODING: HEX (default)
-X-RESTMV-MVENCODING: BASE64
-
-If these are left off then the above defaults will be used.  If you request something else then the request will
-be rejected.
+In json
+{ "data": [
+   "First Name",
+   "Last Name",
+   [ "STREET", "CITY", "STATE", "ZIP" ],
+   [ [ "4-1-1", "4-1-2"], [ "4-2-1", "4-2-2" ]]
+]}
+```
 
 ## Response/Body
 
@@ -69,38 +73,81 @@ locking scheme but it is not complete yet.
 
 ## Methods
 
-https(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
+https(s)://{host}/api/restmv/{version}/file/{filename}/{itemname}
+
+{filename}/{itemname} is actually full pathing.  This is typically
+file/{account}/{file}/{item}
+file/{account}/{dict file}/{item}
+file/{account}/{file}/{file}/{item}
+
 
 This endpoing will handle all file IO.  Normal http verbs action will be utilized for different crud actions
 
 ### Read a record
 
-http(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
+http(s)://{host}/api/restmv/{version}/file/{account}/{filename}/{itemname}
 VERB: GET
 
 Response
 ```
 { "status": "ok",
   "statusmsg":"status msg",
-  "record":"{hex representation of record}"
+  "_id": "id",
+  "type": "array - encoding type"
+  "data": [ "array representation of data" ]
 }
 ```
 
 ### Update a record
 
-http(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
+http(s)://{host}/api/restmv/{version}/file/{account}/{filename}/{itemname}
 VERB: PUT (Post will not be used)
 
-The body needs to contain our record in hex
+The body needs to contain our record as an array
 
 ```
-{  "record": "{hex of data} }
+{  "data": [ "array of data" ] }
 ```
 
 ### Delete a record
 
-http(s)://{host}/api/restmv/{version}/crud/{filename}/{itemname}
+http(s)://{host}/api/restmv/{version}/file/{account}/{filename}/{itemname}
 VERB: DELETE (Should this be more focused??)
+
+### Rename
+
+http(s)://{host}/api/restmv/{version}/rename/{account}/{filename}/{itemname}?newname={newname}
+
+VERB: GET (Should this be more focused??)
+
+### Create Directory/File
+
+http(s)://{host}/api/restmv/{version}/create/{account}/{filename}/{itemname}?type=2
+
+VERB: GET (Should this be more focused??)
+* type 1 File
+* type 2 Directory
+
+### Login
+
+http(s)://{host}/api/restmv/{version}/login
+VERB: POST
+
+Payload
+```
+{
+   "UserId": "User Id",
+   "Password": "Password",
+   "ServerIP": "mvon",
+   "Account": "Optional Account to log into"
+}
+```
+Response
+```
+{
+   "access_token":"wjwt Token"
+}
+```
 
 # Under Construction/todo 
 
@@ -109,10 +156,10 @@ VERB: DELETE (Should this be more focused??)
 http(s)://{host}/api/restmv/{version}/call/subroutinename
 VERB: PUT (Post will not be used)
 
-Params will be passed as hex converted items in a array
+Params will be passed as json arrays.
 
 ```
-{  "params": [ "{param 1 as hex}","{param 2 as hex}",... ]
+{  "params": [ [ "param1" ], [ "param2" ],... ]
 ```
 
 ## Execute
@@ -127,7 +174,7 @@ We will need to handle all the execute options.  This is a very early spec sheet
    "GETLIST":"Name of list to do a GET-LIST first",
    "EXECUTE":"Execute command",
    "DATA ITEMS": [ "array of data statements","data2" ],
-   "CAPTURING": "Captured output",
+   "CAPTURING": "Captured output - Array format",
    "RETURNING": "Returning code"
 }
 

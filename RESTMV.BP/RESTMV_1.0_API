@@ -11,8 +11,10 @@ CALL WGETPARAM(ACTION,2);
 ACTION=OCONV(ACTION,"MCU")
 
 BEGIN CASE
-    CASE ACTION="CRUD"
+    CASE ACTION="FILE" OR ACTION="CREATE" OR ACTION="RENAME"
         GOSUB crudfunction
+    CASE ACTION="LOGIN"
+        GOSUB loginfunction
     CASE ACTION="CALL"
         GOSUB callfunction
     CASE ACTION="EXECUTE"
@@ -77,3 +79,6 @@ executefunction: *
 RETURN
 
 
+loginfunction: *
+
+RETURN
