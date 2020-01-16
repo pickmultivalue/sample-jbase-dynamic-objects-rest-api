@@ -1,0 +1,79 @@
+SUBROUTINE RESTMV_1.0_API(response)
+
+$options jabba
+
+include JBC.h
+
+CALL WGETHEADER(REQUEST_METHOD, "REQUEST_METHOD")
+
+CALL WGETPARAM(ACTION,2);
+ 
+ACTION=OCONV(ACTION,"MCU")
+
+BEGIN CASE
+    CASE ACTION="CRUD"
+        GOSUB crudfunction
+    CASE ACTION="CALL"
+        GOSUB callfunction
+    CASE ACTION="EXECUTE"
+        GOSUB executefunction
+    CASE 1  
+        CALL WSETSTATUS("501")
+        response->status="error"
+        response->statusmsg="Invalid Action"
+END CASE
+
+RETURN
+
+crudfunction: *
+
+
+CALL WGETPARAM(FILENAME,3)
+
+open FILENAME to FILE else
+    CALL WSETSTATUS("502")
+    response->status="error"
+    response->statusmsg="Could not find file ":FILENAME
+    RETURN
+end
+
+CALL WGETPARAM(ITEMNAME,4)
+
+Begin Case
+    case REQUEST_METHOD = "GET"
+        read RECORD from FILE, ITEMNAME else
+            CALL WSETSTATUS("503")
+            response->status="error"
+            response->statusmsg="Could not find item ":ITEMNAME
+            return
+        end
+        call WGETHEADER("HTTP_X_RESTMV_MVENCODING",encoding)
+        encoding=oconv(encoding,"MX")
+        begin case
+           case encoding="base64"
+                response->record = ENCRYPT(RECORD, "", JBASE_CRYPT_BASE64)
+                response->encoding = "BASE64"
+           case 1 
+                response->record = oconv(RECORD,"MX")
+                response->encoding = "HEX"
+        end case
+    case REQUEST_METHOD = "PUT" OR REQUEST_METHOD = "POST"
+        call WGETBODY(BODY)
+        bodyobJ = BODY->$fromjson()
+        RECORD = oconv(bodyobj->record,"MY")
+        write RECORD on FILE, ITEMNAME
+        response->statusmsg = "Wrote ":LEN(RECORD):" bytes to ":FILENAME:" ":ITEMNAME 
+    case REQUEST_METHOD = "DELETE"
+        delete FILE, ITEMNAME
+        response->statusmsg = "Deleted ":FILENAME:" ":ITEMNAME
+End Case
+
+RETURN
+
+callfunction: *
+RETURN
+
+executefunction: *
+RETURN
+
+
